@@ -1,0 +1,38 @@
+# Daily Bellhaven -> CRM sync. Not live for this exercise; this is the config I would use.
+# It only scrapes, matches and queues proposals. CRM writes still require a human to
+# click Accept in the review app, so nothing changes in the CRM without approval.
+name: daily-bellhaven-sync
+
+on:
+  schedule:
+    - cron: "17 13 * * *"   # every day 13:17 UTC (6:17 AM Pacific), before the sales team starts
+  workflow_dispatch: {}      # allow a manual run
+
+permissions:
+  contents: write
+
+concurrency:
+  group: bellhaven-sync
+  cancel-in-progress: false
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - run: pip install -r requirements.txt
+      - name: Run pipeline
+        env:
+          BH_TOKEN: ${{ secrets.BH_TOKEN }}   # stored as a repository secret, never in code
+        run: python run_daily.py
+      - name: Commit refreshed data and review queue
+        run: |
+          git config user.name "bellhaven-sync-bot"
+          git config user.email "bellhaven-sync-bot@users.noreply.github.com"
+          git add data/ viewer.html
+          git diff --cached --quiet || git commit -m "Daily sync $(date -u +%F)"
+          git push

@@ -1,0 +1,368 @@
+[
+  {
+    "kind": "CRM same address",
+    "severity": "high",
+    "ids": [
+      "001U1750VLVJAGG1S5",
+      "0011AB44D05WLA9HTX",
+      "00159PL81N38KM4FHM"
+    ],
+    "detail": "3 accounts at 750 Stewart Rd, 48162: Bellhaven Gardens of Monroe [Bellhaven Senior Living (Parent Account)]; Cedar Trail of Monroe [Cedar Trail Communities (Parent Account)]; Monroe Gardens Care Center [Harborview Care Group (Parent Account)]"
+  },
+  {
+    "kind": "CRM same address",
+    "severity": "high",
+    "ids": [
+      "001CVBBCSDM7YHN220",
+      "001BLYF02K97SZLZHH"
+    ],
+    "detail": "2 accounts at 4930 W Lake Rd, 16505: Bellhaven Shores of Erie [Bellhaven Senior Living (Parent Account)]; Harborview Shores of Erie [Harborview Care Group (Parent Account)]"
+  },
+  {
+    "kind": "CRM same address",
+    "severity": "high",
+    "ids": [
+      "0016KTS1UAWBRXS09J",
+      "001WR41PYNWXCAE2X4",
+      "001B7XZAA3AFALS9GP"
+    ],
+    "detail": "3 accounts at 3313 Wilmington Pike, 45429: Bellhaven of Kettering [Bellhaven Senior Living (Parent Account)]; Kettering Care Centre [Harborview Care Group (Parent Account)]; Kettering Senior Campus [Cedar Trail Communities (Parent Account)]"
+  },
+  {
+    "kind": "CRM same address",
+    "severity": "high",
+    "ids": [
+      "00177A98A79E9DEF41",
+      "001A34WFSUYHCRBLFT"
+    ],
+    "detail": "2 accounts at 805 Colegate Dr, 45750: Bellhaven of Marietta [Bellhaven Senior Living (Parent Account)]; Bellhaven of Marietta [Cedar Trail Communities (Parent Account)]"
+  },
+  {
+    "kind": "CRM same address",
+    "severity": "high",
+    "ids": [
+      "001EGU7BMJ942ZTRE6",
+      "001QU150PM4Z15UA71"
+    ],
+    "detail": "2 accounts at 1120 W Main St, 48867: Bellhaven of Owosso [Bellhaven Senior Living (Parent Account)]; Bellhaven of Owosso [Bellhaven Senior Living (Parent Account)]"
+  },
+  {
+    "kind": "CRM same address",
+    "severity": "high",
+    "ids": [
+      "001UELXDAKFRKB8932",
+      "001JD2MWRA74LTSN24"
+    ],
+    "detail": "2 accounts at 1420 Harbor Point Dr, 43452: Bellhaven of Port Clinton [Bellhaven Senior Living (Parent Account)]; Harborview Nursing & Rehab of Port Clinton [Harborview Care Group (Parent Account)]"
+  },
+  {
+    "kind": "CRM same address",
+    "severity": "high",
+    "ids": [
+      "001SXSF4ELF0Z2LGDM",
+      "0017JP8Z1UQ763BVK3"
+    ],
+    "detail": "2 accounts at 2715 Columbus Ave, 44870: Bellhaven of Sandusky [Bellhaven Senior Living (Parent Account)]; Millstone Care of Sandusky [Millstone Health Partners (Parent Account)]"
+  },
+  {
+    "kind": "CRM same address",
+    "severity": "high",
+    "ids": [
+      "001A7DF09B643A64DF",
+      "001U6RW32TY0WSXZZB"
+    ],
+    "detail": "2 accounts at 45 St Lawrence Dr, 44883: Bellhaven of Tiffin [Bellhaven Senior Living (Parent Account)]; Bellhaven of Tiffin [Cedar Trail Communities (Parent Account)]"
+  },
+  {
+    "kind": "CRM same name",
+    "severity": "high",
+    "ids": [
+      "0015D74ZLRY810RGY5",
+      "00199185211359A29E"
+    ],
+    "detail": "2 accounts named 'Amberly Manor'"
+  },
+  {
+    "kind": "CRM same name",
+    "severity": "high",
+    "ids": [
+      "00177A98A79E9DEF41",
+      "001A34WFSUYHCRBLFT"
+    ],
+    "detail": "2 accounts named 'Bellhaven of Marietta'"
+  },
+  {
+    "kind": "CRM same name",
+    "severity": "high",
+    "ids": [
+      "001EGU7BMJ942ZTRE6",
+      "001QU150PM4Z15UA71"
+    ],
+    "detail": "2 accounts named 'Bellhaven of Owosso'"
+  },
+  {
+    "kind": "CRM same name",
+    "severity": "high",
+    "ids": [
+      "001A7DF09B643A64DF",
+      "001U6RW32TY0WSXZZB"
+    ],
+    "detail": "2 accounts named 'Bellhaven of Tiffin'"
+  },
+  {
+    "kind": "CRM under Bellhaven, not on website",
+    "severity": "high",
+    "ids": [
+      "00116ETS45BL7DTQP7"
+    ],
+    "detail": "Bellhaven Care Center of Alliance (Alliance, OH) is under Bellhaven parent but matches no website location"
+  },
+  {
+    "kind": "CRM under Bellhaven, not on website",
+    "severity": "high",
+    "ids": [
+      "0016PVXH4B25HWR7QE"
+    ],
+    "detail": "Bellhaven of Coldwater (Coldwater, MI) is under Bellhaven parent but matches no website location"
+  },
+  {
+    "kind": "CRM under Bellhaven, not on website",
+    "severity": "high",
+    "ids": [
+      "001SXSF4ELF0Z2LGDM"
+    ],
+    "detail": "Bellhaven of Sandusky (Sandusky, OH) is under Bellhaven parent but matches no website location"
+  },
+  {
+    "kind": "Billing: revenue AND AR > 0",
+    "severity": "medium",
+    "ids": [
+      "0019Y4J61ZBG4R00CD"
+    ],
+    "detail": "Bellhaven Terrace of Akron [Bellhaven Senior Living (Parent Account)]: revenue $101,000, AR $9,000. Do not re-parent; use CHOW."
+  },
+  {
+    "kind": "Billing: revenue AND AR > 0",
+    "severity": "medium",
+    "ids": [
+      "001R4PXTUD9R6FNN8V"
+    ],
+    "detail": "Bellhaven of Defiance [Bellhaven Senior Living (Parent Account)]: revenue $66,000, AR $9,500. Do not re-parent; use CHOW."
+  },
+  {
+    "kind": "Billing: revenue AND AR > 0",
+    "severity": "medium",
+    "ids": [
+      "001A34WFSUYHCRBLFT"
+    ],
+    "detail": "Bellhaven of Marietta [Cedar Trail Communities (Parent Account)]: revenue $51,250, AR $3,800. Do not re-parent; use CHOW."
+  },
+  {
+    "kind": "Billing: revenue AND AR > 0",
+    "severity": "medium",
+    "ids": [
+      "001KC1NG7EZDEKKA3T"
+    ],
+    "detail": "Bellhaven of Meadville [Bellhaven Senior Living (Parent Account)]: revenue $87,000, AR $1,000. Do not re-parent; use CHOW."
+  },
+  {
+    "kind": "Billing: revenue AND AR > 0",
+    "severity": "medium",
+    "ids": [
+      "001SXSF4ELF0Z2LGDM"
+    ],
+    "detail": "Bellhaven of Sandusky [Bellhaven Senior Living (Parent Account)]: revenue $130,000, AR $5,200. Do not re-parent; use CHOW."
+  },
+  {
+    "kind": "Billing: revenue AND AR > 0",
+    "severity": "medium",
+    "ids": [
+      "001U6RW32TY0WSXZZB"
+    ],
+    "detail": "Bellhaven of Tiffin [Cedar Trail Communities (Parent Account)]: revenue $84,000, AR $12,400. Do not re-parent; use CHOW."
+  },
+  {
+    "kind": "Billing: revenue AND AR > 0",
+    "severity": "medium",
+    "ids": [
+      "001WC2VPMSRMLGKEFS"
+    ],
+    "detail": "Bristol Manor Gardens [Juniper Point Healthcare (Parent Account)]: revenue $47,000, AR $4,500. Do not re-parent; use CHOW."
+  },
+  {
+    "kind": "Billing: revenue AND AR > 0",
+    "severity": "medium",
+    "ids": [
+      "001BP1CWFQELP1V08N"
+    ],
+    "detail": "Clearbrook Senior Living [Juniper Point Healthcare (Parent Account)]: revenue $49,000, AR $8,000. Do not re-parent; use CHOW."
+  },
+  {
+    "kind": "Billing: revenue AND AR > 0",
+    "severity": "medium",
+    "ids": [
+      "001FLBJX4DH6BCXLAV"
+    ],
+    "detail": "Harvest Hill Estates [Juniper Point Healthcare (Parent Account)]: revenue $6,000, AR $4,000. Do not re-parent; use CHOW."
+  },
+  {
+    "kind": "Billing: revenue AND AR > 0",
+    "severity": "medium",
+    "ids": [
+      "001AUYU58KMWDYXQA6"
+    ],
+    "detail": "Northfield Care Center [Stonebridge Eldercare (Parent Account)]: revenue $160,000, AR $5,500. Do not re-parent; use CHOW."
+  },
+  {
+    "kind": "Billing: revenue AND AR > 0",
+    "severity": "medium",
+    "ids": [
+      "001N7WFJCG16TZGL6Y"
+    ],
+    "detail": "Rosewood Nursing & Rehabilitation [Stonebridge Eldercare (Parent Account)]: revenue $66,000, AR $4,500. Do not re-parent; use CHOW."
+  },
+  {
+    "kind": "CRM facility with no parent",
+    "severity": "low",
+    "ids": [
+      "001YQH5RQ9VL8C42GU"
+    ],
+    "detail": "Aspen Court Assisted Living has no parent_id"
+  },
+  {
+    "kind": "CRM facility with no parent",
+    "severity": "low",
+    "ids": [
+      "001BR49KRHQDR5HCVS"
+    ],
+    "detail": "Aspen Court Nursing & Rehabilitation has no parent_id"
+  },
+  {
+    "kind": "CRM facility with no parent",
+    "severity": "low",
+    "ids": [
+      "001YTHGSDPVYZKCEMU"
+    ],
+    "detail": "Brookfield Manor has no parent_id"
+  },
+  {
+    "kind": "CRM facility with no parent",
+    "severity": "low",
+    "ids": [
+      "001635XYQP9EZ7JGCN"
+    ],
+    "detail": "Clearbrook Nursing & Rehabilitation has no parent_id"
+  },
+  {
+    "kind": "CRM facility with no parent",
+    "severity": "low",
+    "ids": [
+      "001WQE9H25YMEWBARU"
+    ],
+    "detail": "Golden Gate Gardens has no parent_id"
+  },
+  {
+    "kind": "CRM facility with no parent",
+    "severity": "low",
+    "ids": [
+      "001X5Q9PV6ZSZH9QVB"
+    ],
+    "detail": "Golden Gate Health Campus has no parent_id"
+  },
+  {
+    "kind": "CRM facility with no parent",
+    "severity": "low",
+    "ids": [
+      "001GHXNGX101RS6W00"
+    ],
+    "detail": "Heritage Estates has no parent_id"
+  },
+  {
+    "kind": "CRM facility with no parent",
+    "severity": "low",
+    "ids": [
+      "001N5WGUBLJA45R30X"
+    ],
+    "detail": "Heritage Place has no parent_id"
+  },
+  {
+    "kind": "CRM facility with no parent",
+    "severity": "low",
+    "ids": [
+      "0016M7QA3RN7P2VQ9J"
+    ],
+    "detail": "Ivy Gate Village has no parent_id"
+  },
+  {
+    "kind": "CRM facility with no parent",
+    "severity": "low",
+    "ids": [
+      "00199LM13DSYJ6EBNG"
+    ],
+    "detail": "Northfield Rehabilitation Center has no parent_id"
+  },
+  {
+    "kind": "CRM facility with no parent",
+    "severity": "low",
+    "ids": [
+      "0017B6CMNGFQ8MB8YS"
+    ],
+    "detail": "Rosewood Manor has no parent_id"
+  },
+  {
+    "kind": "CRM facility with no parent",
+    "severity": "low",
+    "ids": [
+      "001KC7UVYEYAZ8M6GN"
+    ],
+    "detail": "Rosewood Village has no parent_id"
+  },
+  {
+    "kind": "CRM facility with no parent",
+    "severity": "low",
+    "ids": [
+      "001SQ3L8LDXR02QLVG"
+    ],
+    "detail": "Silver Birch Rehabilitation Center has no parent_id"
+  },
+  {
+    "kind": "CRM facility with no parent",
+    "severity": "low",
+    "ids": [
+      "001JL9B1K2SX8PLC0G"
+    ],
+    "detail": "Willowbrook Assisted Living has no parent_id"
+  },
+  {
+    "kind": "CRM facility with no parent",
+    "severity": "low",
+    "ids": [
+      "001Q1NFCVW57WXGXZ1"
+    ],
+    "detail": "Willowbrook Gardens has no parent_id"
+  },
+  {
+    "kind": "CRM facility with no parent",
+    "severity": "low",
+    "ids": [
+      "001S2E8GJCGHSWXU8F"
+    ],
+    "detail": "Willowbrook Nursing & Rehabilitation has no parent_id"
+  },
+  {
+    "kind": "CRM facility with no parent",
+    "severity": "low",
+    "ids": [
+      "0014RVA32X0EBHFHRN"
+    ],
+    "detail": "Winding Creek Estates has no parent_id"
+  },
+  {
+    "kind": "CRM facility with no parent",
+    "severity": "low",
+    "ids": [
+      "001EXHQSTKFJW1S18Z"
+    ],
+    "detail": "Winding Creek Health Campus has no parent_id"
+  }
+]

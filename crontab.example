@@ -1,0 +1,2 @@
+# Alternative to GitHub Actions: run on a server every day at 6:17 AM local time.
+17 6 * * * cd /opt/bellhaven-crm-sync && /usr/bin/python3 run_daily.py >> logs/daily.log 2>&1

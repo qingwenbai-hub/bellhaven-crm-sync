@@ -1,0 +1,479 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Bellhaven Data Viewer</title>
+<style>
+  :root { --bg:#f6f5f1; --card:#fff; --ink:#22231f; --mute:#6b6c66; --line:#e3e1d8;
+          --green:#2e5d50; --red:#b4412f; --amber:#a6741a; --blue:#2d5b8a;
+          --redbg:#fbecea; --amberbg:#fbf3e2; --greenbg:#e9f2ee; --bluebg:#e9f0f8; }
+  * { box-sizing:border-box; }
+  body { margin:0; font:14px/1.45 -apple-system, "Segoe UI", Roboto, sans-serif; background:var(--bg); color:var(--ink); }
+  header { position:sticky; top:0; z-index:5; background:var(--green); color:#fff; padding:12px 20px; display:flex; gap:18px; align-items:center; flex-wrap:wrap; }
+  header h1 { font-size:17px; margin:0; font-weight:600; }
+  .tabs button { background:transparent; border:1px solid rgba(255,255,255,.35); color:#fff; padding:6px 12px; border-radius:6px; cursor:pointer; font-size:13px; margin-right:6px; }
+  .tabs button.on { background:#fff; color:var(--green); }
+  .bar { display:flex; gap:10px; flex-wrap:wrap; align-items:center; padding:12px 20px; background:var(--card); border-bottom:1px solid var(--line); position:sticky; top:52px; z-index:4; }
+  .bar input, .bar select { padding:7px 10px; border:1px solid var(--line); border-radius:6px; font-size:13px; }
+  .bar input[type=search] { width:260px; }
+  .count { color:var(--mute); font-size:12px; margin-left:auto; }
+  main { padding:16px 20px 60px; }
+  table { width:100%; border-collapse:collapse; background:var(--card); border:1px solid var(--line); }
+  th, td { text-align:left; padding:7px 9px; border-bottom:1px solid var(--line); vertical-align:top; font-size:13px; }
+  th { background:#efede6; position:sticky; top:104px; cursor:pointer; user-select:none; white-space:nowrap; font-weight:600; }
+  tr:hover td { background:#faf9f5; }
+  .mono { font-family: ui-monospace, Menlo, monospace; font-size:12px; color:var(--mute); }
+  .pill { display:inline-block; padding:1px 7px; border-radius:10px; font-size:11px; margin:1px 3px 1px 0; white-space:nowrap; }
+  .p-red { background:var(--redbg); color:var(--red); } .p-amber { background:var(--amberbg); color:var(--amber); }
+  .p-green { background:var(--greenbg); color:var(--green); } .p-blue { background:var(--bluebg); color:var(--blue); }
+  .p-gray { background:#eeede8; color:var(--mute); }
+  .diff { background:var(--amberbg); color:var(--amber); border-radius:3px; padding:0 3px; }
+  .card { background:var(--card); border:1px solid var(--line); border-radius:8px; margin-bottom:14px; overflow:hidden; }
+  .card .head { padding:10px 14px; display:flex; gap:10px; align-items:baseline; flex-wrap:wrap; border-bottom:1px solid var(--line); }
+  .card .head b { font-size:15px; }
+  .grid { display:grid; grid-template-columns: 140px repeat(var(--n), minmax(200px,1fr)); }
+  .grid > div { padding:6px 10px; border-bottom:1px solid var(--line); border-right:1px solid var(--line); font-size:13px; }
+  .grid .lbl { color:var(--mute); background:#faf9f5; font-size:12px; }
+  .grid .colhead { font-weight:600; background:#f3f1ea; }
+  .grid .web { background:var(--greenbg); }
+  .empty { color:var(--red); font-style:italic; }
+  .none { padding:14px; color:var(--red); }
+  a.jump { color:var(--blue); cursor:pointer; text-decoration:underline; }
+  .flash td { animation: fl 1.6s; } @keyframes fl { from { background:#fff3b8; } }
+  .legend { font-size:12px; color:var(--mute); margin:0 0 12px; }
+  .btn { font:inherit; font-size:12px; padding:5px 12px; border-radius:6px; border:1px solid var(--line); background:#fff; cursor:pointer; margin:6px 6px 0 0; }
+  .btn.ok { background:var(--green); color:#fff; border-color:var(--green); }
+  .btn.no { color:var(--red); border-color:#e5c3bd; }
+  .btn:disabled { opacity:.45; cursor:not-allowed; }
+  .plan { font-size:12px; line-height:1.5; }
+  .plan li { margin-bottom:4px; }
+  .plan code { font-family: ui-monospace, Menlo, monospace; font-size:11.5px; }
+  .decided { padding:3px 8px; border-radius:6px; font-size:12px; display:inline-block; margin-top:6px; }
+  .decided.acc { background:var(--greenbg); color:var(--green); }
+  .decided.dec { background:var(--redbg); color:var(--red); }
+  .hdr-right { margin-left:auto; display:flex; gap:8px; align-items:center; font-size:12px; }
+  .hdr-right .btn { margin:0; }
+  @media (max-width:700px){ .bar input[type=search]{width:100%;} th{top:0;} .grid{grid-template-columns:110px repeat(var(--n),minmax(160px,1fr)); overflow-x:auto;} }
+</style>
+</head>
+<body>
+<header>
+  <h1>Bellhaven Data Viewer</h1>
+  <div class="tabs" id="tabs"></div>
+  <div class="hdr-right" id="hdrRight"></div>
+</header>
+<div class="bar" id="bar"></div>
+<main id="main"></main>
+
+<script>
+const D = /*__DATA__*/null;
+const BH = D.bellhaven_parent;
+const byId = Object.fromEntries(D.crm.map(a => [a.account_id, a]));
+const issuesById = {};
+D.issues.forEach(i => i.ids.forEach(id => (issuesById[id] ||= []).push(i)));
+
+const ABBR = D.abbr;
+const nst = s => { let x = ' ' + (s||'').toLowerCase().replace(/[^a-z0-9 ]/g,' ').split(/\s+/).filter(Boolean).join(' ') + ' ';
+  D.abbr_phrases.forEach(([l, sh]) => { x = x.split(' '+l+' ').join(' '+sh+' '); });
+  return x.split(' ').filter(Boolean).map(t=>ABBR[t]||t).join(' '); };
+const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const money = n => n ? '$' + Number(n).toLocaleString() : '<span class="mono">0</span>';
+
+let state = { tab:'compare', q:'', parent:'', st:'', flag:'', sort:null, dir:1 };
+
+const siteById = Object.fromEntries(D.sites.map(s => [s.site_id, s]));
+const TABS = [['compare','Compare'],['orphans','Not on website ('+D.orphans.length+')'],['web','Website ('+D.web.length+')'],['crm','CRM ('+D.crm.length+')'],['sites','CRM sites ('+D.sites.length+')'],['issues','Data issues ('+D.issues.length+')']];
+function renderTabs(){
+  document.getElementById('tabs').innerHTML = TABS.map(([k,l]) => `<button class="${state.tab===k?'on':''}" data-t="${k}">${l}</button>`).join('');
+  document.querySelectorAll('#tabs button').forEach(b => b.onclick = () => { state.tab=b.dataset.t; state.sort=null; state.flag=''; state.parent=''; render(); });
+}
+
+function parentPill(a){
+  if (!a.parent_id) return a.name.includes('(Parent Account)') ? '<span class="pill p-gray">parent account</span>' : '<span class="pill p-red">no parent</span>';
+  const n = (a.parent_name||'').replace(' (Parent Account)','');
+  return `<span class="pill ${a.parent_id===BH?'p-green':'p-amber'}">${esc(n)}</span>`;
+}
+function issuePills(id){ return (issuesById[id]||[]).map(i => `<span class="pill ${i.severity==='high'?'p-red':i.severity==='medium'?'p-amber':'p-gray'}" title="${esc(i.detail)}">${esc(i.kind)}</span>`).join(''); }
+
+function renderBar(){
+  const parents = [...new Set(D.crm.map(a=>a.parent_name).filter(Boolean))].sort();
+  const states = [...new Set([...D.crm.map(a=>a.billing_state), ...D.web.map(w=>w.state)].filter(Boolean))].sort();
+  let h = `<input type="search" id="q" placeholder="Search name, street, city, zip, id…" value="${esc(state.q)}">`;
+  h += `<select id="st"><option value="">All states</option>${states.map(s=>`<option ${state.st===s?'selected':''}>${s}</option>`).join('')}</select>`;
+  if (state.tab==='crm') {
+    h += `<select id="parent"><option value="">All parents</option><option value="__none" ${state.parent==='__none'?'selected':''}>(no parent)</option>${parents.map(p=>`<option ${state.parent===p?'selected':''}>${esc(p)}</option>`).join('')}</select>`;
+    h += `<select id="flag"><option value="">All rows</option>
+      <option value="bh" ${state.flag==='bh'?'selected':''}>Bellhaven in name or parent</option>
+      <option value="issue" ${state.flag==='issue'?'selected':''}>Has a data issue</option>
+      <option value="billing" ${state.flag==='billing'?'selected':''}>Revenue AND AR &gt; 0</option>
+      <option value="inactive" ${state.flag==='inactive'?'selected':''}>Inactive</option></select>`;
+  }
+  if (state.tab==='compare') {
+    const n = k => D.web.filter(w=>w.match.status===k).length;
+    h += `<select id="flag"><option value="">All locations</option>
+      <option value="confident" ${state.flag==='confident'?'selected':''}>Confident match (${n('confident')})</option>
+      <option value="needs_fix" ${state.flag==='needs_fix'?'selected':''}>Needs fix / review (${n('needs_fix')})</option>
+      <option value="no_crm" ${state.flag==='no_crm'?'selected':''}>No CRM account (${n('no_crm')})</option>
+      <option value="pending" ${state.flag==='pending'?'selected':''}>Review: pending (${D.web.filter(w=>!acceptedFor(w.slug)).length})</option>
+      <option value="accepted" ${state.flag==='accepted'?'selected':''}>Review: accepted (${D.web.filter(w=>acceptedFor(w.slug)).length})</option>
+      <option value="declined" ${state.flag==='declined'?'selected':''}>Review: has a declined match (${D.web.filter(w=>decisionsFor(w.slug).some(d=>d.action==='decline')).length})</option>
+      <option value="billing" ${state.flag==='billing'?'selected':''}>Billing flag: revenue AND AR (${D.web.filter(w=>w.match.billing_flag).length})</option>
+      <option value="chow" ${state.flag==='chow'?'selected':''}>CHOW required (${D.web.filter(w=>w.match.chow_required).length})</option>
+      <option value="sameaddr" ${state.flag==='sameaddr'?'selected':''}>Confident, other accounts at same address (${D.web.filter(w=>(w.match.same_address_others||[]).length).length})</option>
+      <option value="fixes" ${state.flag==='fixes'?'selected':''}>Confident but fields differ (${D.web.filter(w=>w.match.fixes&&w.match.fixes.length).length})</option></select>`;
+  }
+  if (state.tab==='sites') {
+    h += `<select id="flag"><option value="">All sites</option><option value="multi" ${state.flag==='multi'?'selected':''}>Sites with 2+ accounts (${D.sites.filter(s=>s.account_ids.length>1).length})</option></select>`;
+  }
+  if (state.tab==='issues') {
+    const kinds = [...new Set(D.issues.map(i=>i.kind))];
+    h += `<select id="flag"><option value="">All kinds</option>${kinds.map(k=>`<option ${state.flag===k?'selected':''}>${esc(k)}</option>`).join('')}</select>`;
+  }
+  h += `<span class="count" id="count"></span>`;
+  const bar = document.getElementById('bar'); bar.innerHTML = h;
+  const q = document.getElementById('q'); q.oninput = () => { state.q=q.value; renderMain(); };
+  ['st','parent','flag'].forEach(id => { const el=document.getElementById(id); if (el) el.onchange = () => { state[id]=el.value; renderMain(); }; });
+}
+
+const qmatch = (obj) => !state.q || JSON.stringify(obj).toLowerCase().includes(state.q.toLowerCase());
+
+function sortRows(rows, cols){
+  if (state.sort==null) return rows;
+  const f = cols[state.sort][1];
+  return rows.slice().sort((a,b) => { const x=f(a), y=f(b); return (typeof x==='number' ? x-y : String(x).localeCompare(String(y))) * state.dir; });
+}
+function table(cols, rows, rowId){
+  rows = sortRows(rows, cols);
+  let h = '<table><thead><tr>' + cols.map((c,i)=>`<th data-i="${i}">${c[0]}${state.sort===i?(state.dir>0?' ▲':' ▼'):''}</th>`).join('') + '</tr></thead><tbody>';
+  h += rows.map(r => `<tr id="row-${esc(rowId(r))}">` + cols.map(c=>`<td>${c[2] ? c[2](r) : esc(c[1](r))}</td>`).join('') + '</tr>').join('');
+  return h + '</tbody></table>';
+}
+function bindSort(){ document.querySelectorAll('th[data-i]').forEach(th => th.onclick = () => { const i=+th.dataset.i; state.dir = state.sort===i ? -state.dir : 1; state.sort=i; renderMain(); }); }
+
+function webRows(){
+  return D.web.filter(w => (!state.st || w.state===state.st) && qmatch(w));
+}
+function crmRows(){
+  return D.crm.filter(a => {
+    if (state.st && a.billing_state!==state.st) return false;
+    if (state.parent==='__none' && a.parent_id) return false;
+    if (state.parent && state.parent!=='__none' && a.parent_name!==state.parent) return false;
+    if (state.flag==='bh' && !(a.name+a.parent_name).toLowerCase().includes('bellhaven')) return false;
+    if (state.flag==='issue' && !issuesById[a.account_id]) return false;
+    if (state.flag==='billing' && !(a.lifetime_revenue>0 && a.outstanding_ar>0)) return false;
+    if (state.flag==='inactive' && a.status!=='Inactive') return false;
+    return qmatch(a);
+  });
+}
+
+function fieldsDiffer(w, a){
+  const d = [];
+  if (w.name.toLowerCase() !== a.name.toLowerCase()) d.push('name');
+  if (nst(w.address) !== nst(a.billing_street)) d.push('street');
+  if (w.city.toLowerCase() !== (a.billing_city||'').toLowerCase()) d.push('city');
+  if (w.zip !== a.billing_zip) d.push('zip');
+  if (w.phone !== a.phone) d.push('phone');
+  if (a.parent_id !== BH) d.push('parent');
+  return d;
+}
+
+function compareView(){
+  const strong = w => w.candidates.filter(c => c.score >= 60);
+  let rows = webRows().filter(w => {
+    const m = w.match;
+    if (['confident','needs_fix','no_crm'].includes(state.flag)) return m.status===state.flag;
+    if (state.flag==='billing') return m.billing_flag;
+    if (state.flag==='chow') return m.chow_required;
+    if (state.flag==='fixes') return m.fixes && m.fixes.length;
+    if (state.flag==='sameaddr') return (m.same_address_others||[]).length;
+    if (state.flag==='pending') return !acceptedFor(w.slug);
+    if (state.flag==='accepted') return !!acceptedFor(w.slug);
+    if (state.flag==='declined') return decisionsFor(w.slug).some(d=>d.action==='decline');
+    return true;
+  });
+  document.getElementById('count').textContent = rows.length + ' locations';
+  const wt = Object.entries(D.weights).map(([k,v])=>`${k} ${v}`).join(' · ');
+  let h = `<p class="legend">Green column = website. Others = CRM sites (accounts at the same normalized address are grouped). Score weights (max 100): <b>${wt}</b>. Confident = exactly one site scores ${D.confident_score}+. <span class="diff">Highlighted</span> cells differ from the website. Locations with no ${D.confident_score}+ candidate also get a wide search listing every CRM account with any overlap.</p>`;
+  h += rows.map(w => {
+    const cands = w.candidates.map(c => ({...c, a: byId[c.account_id]}));
+    const n = 1 + cands.length;
+    const cell = (val, webVal, cmp) => {
+      if (!val && val!==0) return `<div class="empty">empty</div>`;
+      const differ = cmp ? cmp(val, webVal) : String(val).toLowerCase() !== String(webVal).toLowerCase();
+      return `<div>${differ ? `<span class="diff">${esc(val)}</span>` : esc(val)}</div>`;
+    };
+    const rowsDef = [
+      ['Name', w.name, c => cell(c.a.name, w.name)],
+      ['Street', w.address, c => cell(c.a.billing_street, w.address, (x,y)=>nst(x)!==nst(y))],
+      ['Street (normalized)', nst(w.address), c => cell(nst(c.a.billing_street), nst(w.address))],
+      ['City', w.city, c => cell(c.a.billing_city, w.city)],
+      ['State', w.state, c => cell(c.a.billing_state, w.state)],
+      ['Zip', w.zip, c => cell(c.a.billing_zip, w.zip)],
+      ['Phone', w.phone, c => cell(c.a.phone, w.phone)],
+      ['Site accounts', '', c => { const s = siteById[c.site_id]; return `<div>${s.account_ids.length>1?`<span class="pill p-amber">${s.account_ids.length} accounts at this address</span><br>`:''}${c.site_accounts.map(x => { const a = byId[x.account_id]; return `<span class="mono">${x.score}</span> <a class="jump" data-id="${a.account_id}">${esc(a.name)}</a> ${parentPill(a)} <span class="mono">${esc(a.phone)}</span>${a.billing_flag?' <span class="pill p-red">💲</span>':''}`; }).join('<br>')}</div>`; }],
+      ['Care', w.care_offerings.join(', '), c => `<div>${esc(c.a.care_type)||'<span class="empty">empty</span>'}</div>`],
+      ['Parent', 'Bellhaven (website)', c => `<div>${parentPill(c.a)}</div>`],
+      ['Status', '', c => `<div><span class="pill ${c.a.status==='Active'?'p-green':'p-gray'}">${esc(c.a.status)}</span></div>`],
+      ['Revenue / AR', '', c => `<div>${money(c.a.lifetime_revenue)} / ${c.a.outstanding_ar>0?`<b style="color:var(--red)">${money(c.a.outstanding_ar)}</b>`:money(0)}${c.a.billing_flag?' <span class="pill p-red">💲 do not re-parent</span>':''}</div>`],
+      ['Issues', '', c => `<div>${issuePills(c.a.account_id)||'<span class="mono">none</span>'}</div>`],
+    ];
+    const m = w.match;
+    let g = `<div class="grid" style="--n:${n}"><div class="lbl colhead"></div><div class="colhead web">Website</div>` +
+      cands.map(c => `<div class="colhead"${c.account_id===m.matched_account_id?' style="background:var(--greenbg)"':''}>${c.account_id===m.matched_account_id?'✓ MATCH · ':''}CRM · score ${c.score} · <a class="jump" data-id="${c.account_id}">${c.account_id}</a><br><span class="mono">${esc(c.why.join(', '))}</span></div>`).join('');
+    rowsDef.push(['Review', '', c => reviewCell(w, c)]);
+    rowsDef.forEach(([lbl, wv, f]) => { g += `<div class="lbl">${lbl}</div><div class="web">${esc(wv)}</div>` + cands.map(f).join(''); });
+    g += '</div>';
+    const statusPill = {confident:'<span class="pill p-green">confident match</span>', needs_fix:'<span class="pill p-amber">needs fix / review</span>', no_crm:'<span class="pill p-red">no CRM account</span>'}[m.status];
+    const accD = acceptedFor(w.slug);
+    let tag = (accD ? `<span class="pill p-green">✓ accepted: ${esc(byId[accD.account_id]?.name || accD.account_id)}</span>` : '') + statusPill + `<span class="mono">${esc(m.reason)}</span>`;
+    if (m.billing_flag) tag += '<span class="pill p-red">💲 revenue + AR</span>';
+    if (m.chow_required) tag += '<span class="pill p-red">CHOW required</span>';
+    if ((m.same_address_others||[]).length) tag += `<span class="pill p-amber">${m.same_address_others.length} other account(s) at same address</span>`;
+    if (m.fixes && m.fixes.length) tag += m.fixes.map(f => `<span class="pill p-amber" title="${esc(f.from)} → ${esc(f.to)}">fix ${esc(f.field)}</span>`).join('');
+    return `<div class="card"><div class="head"><b>${esc(w.name)}</b><span class="mono">${esc(w.city)}, ${esc(w.state)}</span>${tag}<a class="mono" href="${esc(w.url)}" target="_blank">website ↗</a></div>${m.fixes && m.fixes.length ? `<div style="padding:8px 14px;border-bottom:1px solid var(--line);font-size:13px"><b>Fields to update on matched account:</b> ${m.fixes.map(f=>`${esc(f.field)}: <s>${esc(f.from)}</s> → ${esc(f.to)}`).join(' · ')}${m.chow_required?' <b style="color:var(--red)">· parent change must go through CHOW (new account), not a direct re-parent</b>':''}</div>` : ''}${cands.length ? g : '<div class="none">No CRM account scored 30+ in the strict pass.</div>'}${createBlock(w)}${possibleBlock(w)}</div>`;
+  }).join('');
+  return h;
+}
+
+// ---------- review: Accept / Decline ----------
+const API = D.served ? '' : 'http://127.0.0.1:8765';
+const keyOf = (slug, siteId) => slug + '|' + siteId;
+// decisions are keyed slug|account_id; a candidate is decided if any account in its site was decided
+const decisionForCand = (slug, c) => c.site_accounts.map(x => D.decisions[slug + '|' + x.account_id]).find(Boolean);
+const decisionsFor = slug => Object.values(D.decisions).filter(d => d.slug === slug);
+const acceptedFor = slug => decisionsFor(slug).find(d => d.action === 'accept');
+
+function fmtVal(v){ return v === '@NEW' ? '<i>new account id</i>' : esc(v); }
+function planHtml(ops){
+  if (!ops || !ops.length) return '<span class="mono">No CRM writes (either the CRM already agrees, or the account has revenue + AR and must not be edited). Accept just records the decision.</span>';
+  return '<ol class="plan">' + ops.map(o => {
+    const f = Object.entries(o.fields).filter(([k]) => k !== 'note');
+    const hasNote = 'note' in o.fields;
+    if (o.op === 'create') {
+      return `<li><b>CREATE</b> new account under Bellhaven: ${f.map(([k,v])=>`<code>${k}</code>=${fmtVal(v)}`).join(', ')}${hasNote?' + note':''}<br><span class="mono">${esc(o.why)}</span></li>`;
+    }
+    const a = byId[o.account_id];
+    return `<li><b>UPDATE</b> ${esc(a ? a.name : o.account_id)} <span class="mono">${esc(o.account_id)}</span>: ${f.map(([k,v])=>`<code>${k}</code> ${o.before && o.before[k]!==undefined ? `<s>${esc(o.before[k]||'(empty)')}</s> → ` : ''}${fmtVal(v)}`).join(', ')}${hasNote?' + note':''}<br><span class="mono">${esc(o.why)}</span></li>`;
+  }).join('') + '</ol>';
+}
+
+const planIsChow = ops => (ops || []).some(o => 'chow_current_account' in o.fields);
+const isBilling = a => a && a.lifetime_revenue > 0 && a.outstanding_ar > 0;
+function acceptLabel(key, acct){
+  const ops = D.plans[key] || [];
+  if (planIsChow(ops)) return 'CHOW';
+  if (!ops.length && isBilling(byId[acct])) return 'Keep as is';
+  return 'Accept';
+}
+function reviewCell(w, c){
+  const key = keyOf(w.slug, c.site_id);
+  const d = decisionForCand(w.slug, c);
+  const acc = acceptedFor(w.slug);
+  let h = planHtml(D.plans[key]);
+  const lbl = acceptLabel(key, c.account_id);
+  if (lbl === 'CHOW') h += `<div class="mono" style="color:var(--red);margin-top:4px">CHOW (revenue + AR): a NEW account is created under Bellhaven Senior Living. The old account is not edited; only its chow_current_account is set to the new id.</div>`;
+  if (lbl === 'Keep as is') h += `<div class="mono" style="color:var(--red);margin-top:4px">Revenue + AR, and already under the correct parent: no CHOW needed. Nothing is written to the CRM; the decision is only recorded.</div>`;
+  if (d) {
+    h += d.action === 'accept'
+      ? `<div class="decided acc">✓ ${lbl === 'CHOW' ? 'CHOW done' : lbl === 'Keep as is' ? 'Kept as is' : 'Accepted'} ${esc(d.at)}${d.dry_run?' (dry run)':''}${(d.ops||[]).length?` · ${d.ops.length} write(s) sent`:''}${(d.ops||[]).filter(o=>o.op==='create').map(o=>` · new account ${esc(o.account_id)}`).join('')}</div>`
+      : `<div class="decided dec">✗ Declined ${esc(d.at)}${d.reason?': '+esc(d.reason):''}</div>`;
+  } else if (acc) {
+    h += `<div class="decided dec">Another CRM site was accepted for this location</div>`;
+  } else {
+    const dis = '';
+    h += `<div><button class="btn ok" data-act="accept" data-slug="${w.slug}" data-site="${c.site_id}" data-acct="${c.account_id}" data-label="${acceptLabel(key, c.account_id)}"${dis}${planIsChow(D.plans[key]) ? ' style="background:var(--red);border-color:var(--red)"' : ''}>${acceptLabel(key, c.account_id)}</button>`
+       + `<button class="btn no" data-act="decline" data-slug="${w.slug}" data-site="${c.site_id}" data-acct="${c.account_id}"${dis}>Decline</button></div>`;
+  }
+  return `<div>${h}</div>`;
+}
+
+function actionBox(kind, key, slug, acct, label){
+  const d = D.decisions[key];
+  let h = planHtml(D.plans[key]);
+  if (d) {
+    h += d.action === 'accept'
+      ? `<div class="decided acc">✓ Accepted ${esc(d.at)}${d.dry_run?' (dry run)':''}${(d.ops||[]).length?` · ${d.ops.length} write(s) sent`:''}</div>`
+      : `<div class="decided dec">✗ Declined ${esc(d.at)}${d.reason?': '+esc(d.reason):''}</div>`;
+  } else if (kind === 'create' && acceptedFor(slug)) {
+    h += `<div class="decided dec">A CRM match was accepted for this location</div>`;
+  } else {
+    h += `<div><button class="btn ok" data-act="accept" data-kind="${kind}" data-slug="${slug}" data-acct="${acct||''}" data-label="${esc(label)}">${kind === 'create' ? 'Create' : kind === 'orphan' ? 'Flag' : 'Accept'}</button>`
+       + `<button class="btn no" data-act="decline" data-kind="${kind}" data-slug="${slug}" data-acct="${acct||''}" data-label="${esc(label)}">Decline</button></div>`;
+  }
+  return h;
+}
+
+function createBlock(w){
+  if (w.match.status === 'confident') return '';
+  return `<div style="padding:10px 14px;border-top:1px solid var(--line)">
+    <div style="font-size:13px;margin-bottom:4px"><b>${w.match.status === 'no_crm' ? 'No CRM account exists: create one' : 'Option: create a new CRM account'}</b> <span class="mono">${w.match.status === 'no_crm' ? '(new account under Bellhaven with the website data)' : '(use this if none of the CRM accounts above is this building)'}</span></div>
+    ${actionBox('create', w.slug + '|NEW', w.slug, '', 'Create new account for ' + w.name)}</div>`;
+}
+
+function orphansView(){
+  const rows = D.orphans.filter(o => qmatch(byId[o.account_id]));
+  document.getElementById('count').textContent = rows.length + ' accounts';
+  return `<p class="legend">CRM accounts under the Bellhaven parent that match no location on the Bellhaven website. The new owner is unknown, so the proposal is to keep the parent and flag the account as Needs Review with a note.</p>` +
+    rows.map(o => { const a = byId[o.account_id]; return `<div class="card"><div class="head"><b>${esc(a.name)}</b><span class="mono">${esc(a.billing_street)}, ${esc(a.billing_city)}, ${esc(a.billing_state)} ${esc(a.billing_zip)}</span>${parentPill(a)}<span class="pill ${a.status==='Active'?'p-green':'p-gray'}">${esc(a.status)}</span>${a.billing_flag?'<span class="pill p-red">💲 revenue + AR</span>':''}<span class="mono">revenue ${money(a.lifetime_revenue)} / AR ${money(a.outstanding_ar)}</span></div>
+      <div style="padding:10px 14px">${actionBox('orphan', 'orphan|' + a.account_id, '', a.account_id, 'Flag ' + a.name + ' as Needs Review')}</div></div>`; }).join('');
+}
+
+async function decide(btn){
+  const {act, slug, site, acct} = btn.dataset;
+  const kind = btn.dataset.kind || 'match';
+  if (kind !== 'match') {
+    const key = kind === 'orphan' ? 'orphan|' + acct : slug + '|NEW';
+    const ops = D.plans[key] || [];
+    let reason = '';
+    if (act === 'accept') { if (!confirm(`${btn.dataset.label}?\n\n${ops.length} CRM write(s) will be sent${D.dry_run?' (DRY RUN)':''}.`)) return; }
+    else { reason = prompt(`Decline: ${btn.dataset.label}\nOptional reason:`, ''); if (reason === null) return; }
+    btn.disabled = true; btn.textContent = 'Saving…';
+    try {
+      const r = await fetch(API + '/api/decide', {method:'POST', headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({kind, slug, account_id: acct, action: act, reason})});
+      const j = await r.json();
+      if (!r.ok) throw new Error(j.error || r.statusText);
+      D.decisions[key] = j.decision; renderMain();
+    } catch (e) {
+      alert(e instanceof TypeError ? 'The review server is not running.\n\nDouble-click start_review.command, then try again.' : 'Failed: ' + e.message);
+      btn.disabled = false; btn.textContent = act === 'accept' ? (kind === 'create' ? 'Create' : 'Flag') : 'Decline';
+    }
+    return;
+  }
+  const w = D.web.find(x => x.slug === slug);
+  const ops = D.plans[keyOf(slug, site)] || [];
+  let reason = '';
+  if (act === 'accept') {
+    const cr = ops.find(o => o.op === 'create');
+    const chowNote = planIsChow(ops)
+      ? `\n\nCHOW will:\n1. CREATE a new account "${cr ? cr.fields.name : w.name}" under Bellhaven Senior Living with the website data\n2. Set chow_current_account on the old account (${byId[acct].name}, ${acct}) to the new account id\n\nThe old account is not edited in any other way.`
+      : (!ops.length && isBilling(byId[acct])) ? '\n\nThis account has revenue + AR and is already under Bellhaven. Nothing will be written.' : '';
+    const msg = `${btn.dataset.label || 'Accept'}: ${byId[acct].name} for "${w.name}"?${chowNote}\n\n${ops.length} CRM write(s) will be sent${D.dry_run?' (DRY RUN: nothing is really written)':''}.`;
+    if (!confirm(msg)) return;
+  } else {
+    reason = prompt(`Decline ${byId[acct].name} for "${w.name}"?\nOptional reason:`, '');
+    if (reason === null) return;
+  }
+  btn.disabled = true; btn.textContent = act === 'accept' ? 'Writing…' : 'Saving…';
+  try {
+    const r = await fetch(API + '/api/decide', {method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({slug, site_id: site, account_id: acct, action: act, reason})});
+    const j = await r.json();
+    if (!r.ok) throw new Error(j.error || r.statusText);
+    D.decisions[slug + '|' + acct] = j.decision;
+    renderMain();
+  } catch (e) {
+    const offline = e instanceof TypeError;
+    alert(offline
+      ? 'The review server is not running.\n\nDouble-click start_review.command in the project folder (or run: python3 review_app.py), then try again.'
+      : 'Failed: ' + e.message + '\nNothing was recorded; you can try again.');
+    btn.disabled = false; btn.textContent = act === 'accept' ? (btn.dataset.label || 'Accept') : 'Decline';
+  }
+}
+
+function renderHeader(){
+  const el = document.getElementById('hdrRight');
+  const n = Object.values(D.decisions);
+  const counts = `${n.filter(d=>d.action==='accept').length} accepted · ${n.filter(d=>d.action==='decline').length} declined`;
+  if (!D.served) { el.innerHTML = `<span class="pill p-amber" style="margin:0">Review server offline</span><span style="opacity:.85">Double-click <b>start_review.command</b> to enable Accept / Decline</span>`; return; }
+  el.innerHTML = `${D.dry_run?'<span class="pill p-amber" style="margin:0">DRY RUN</span>':''}<span>${counts}</span><button class="btn" id="refreshBtn">Refresh from CRM</button>`;
+  document.getElementById('refreshBtn').onclick = async (e) => {
+    e.target.disabled = true; e.target.textContent = 'Refreshing…';
+    const r = await fetch(API + '/api/refresh', {method:'POST'});
+    if (r.ok) location.reload(); else { alert('Refresh failed'); e.target.disabled = false; e.target.textContent = 'Refresh from CRM'; }
+  };
+}
+
+function possibleBlock(w){
+  const p = w.match.possible || [];
+  if (!p.length) return '';
+  const rows = p.map(c => { const a = byId[c.account_id]; return `<tr>
+    <td><b>${c.score}</b></td>
+    <td><a class="jump" data-id="${a.account_id}">${esc(a.name)}</a>${c.site_accounts.length>1?` <span class="pill p-amber">+${c.site_accounts.length-1} at same address</span>`:''}</td>
+    <td>${esc(a.billing_street)||'<span class="empty">empty</span>'}</td>
+    <td>${esc(a.billing_city)}, ${esc(a.billing_state)} ${esc(a.billing_zip)}</td>
+    <td>${esc(a.phone)}</td><td>${parentPill(a)}</td>
+    <td>${money(a.lifetime_revenue)} / ${a.outstanding_ar>0?`<b style="color:var(--red)">${money(a.outstanding_ar)}</b>`:money(0)}${a.billing_flag?' <span class="pill p-red">💲</span>':''}</td>
+    <td class="mono">${esc(c.why.join(', '))}</td></tr>`; }).join('');
+  return `<div style="padding:10px 14px;background:#faf9f5;border-top:1px solid var(--line)">
+    <div style="font-size:13px;margin-bottom:6px"><b>Wide search: other possible CRM sites</b> <span class="mono">(no ${D.confident_score}+ candidate in the strict pass, so other sites with any overlap are listed, top ${p.length}. Sites already shown above are not repeated.)</span></div>
+    <table><thead><tr><th>Score</th><th>Name</th><th>Street</th><th>City / Zip</th><th>Phone</th><th>Parent</th><th>Revenue / AR</th><th>Why</th></tr></thead><tbody>${rows}</tbody></table></div>`;
+}
+
+function webView(){
+  const rows = webRows();
+  document.getElementById('count').textContent = rows.length + ' of ' + D.web.length;
+  return table([
+    ['Name', r=>r.name, r=>`<a href="${esc(r.url)}" target="_blank">${esc(r.name)}</a>`],
+    ['Street', r=>r.address], ['City', r=>r.city], ['State', r=>r.state], ['Zip', r=>r.zip],
+    ['Care offerings', r=>r.care_offerings.join(', '), r=>r.care_offerings.map(c=>`<span class="pill p-blue">${esc(c)}</span>`).join('')],
+    ['Phone', r=>r.phone], ['Administrator', r=>r.administrator],
+    ['Top CRM match', r=>r.candidates[0]?.score||0, r=>{ const c=r.candidates[0]; if(!c) return '<span class="pill p-red">none</span>'; const a=byId[c.account_id]; return `<a class="jump" data-id="${c.account_id}">${esc(a.name)}</a> <span class="mono">(${c.score})</span>`; }],
+  ], rows, r=>r.slug);
+}
+
+function crmView(){
+  const rows = crmRows();
+  document.getElementById('count').textContent = rows.length + ' of ' + D.crm.length;
+  return table([
+    ['ID', r=>r.account_id, r=>`<span class="mono">${esc(r.account_id)}</span>`],
+    ['Name', r=>r.name], ['Parent', r=>r.parent_name, parentPill],
+    ['Street', r=>r.billing_street, r=>r.billing_street?esc(r.billing_street):'<span class="empty">empty</span>'],
+    ['City', r=>r.billing_city], ['State', r=>r.billing_state], ['Zip', r=>r.billing_zip],
+    ['Care type', r=>r.care_type], ['Phone', r=>r.phone],
+    ['Status', r=>r.status, r=>`<span class="pill ${r.status==='Active'?'p-green':'p-gray'}">${esc(r.status)}</span>`],
+    ['Revenue', r=>r.lifetime_revenue, r=>money(r.lifetime_revenue)],
+    ['AR', r=>r.outstanding_ar, r=>(r.outstanding_ar>0?`<b style="color:var(--red)">${money(r.outstanding_ar)}</b>`:money(0)) + (r.billing_flag?' <span class="pill p-red">💲</span>':'')],
+    ['Issues', r=>(issuesById[r.account_id]||[]).length, r=>issuePills(r.account_id)],
+  ], rows, r=>r.account_id);
+}
+
+function issuesView(){
+  const rows = D.issues.filter(i => (!state.flag || i.kind===state.flag) && qmatch(i));
+  document.getElementById('count').textContent = rows.length + ' of ' + D.issues.length;
+  const webBySlug = Object.fromEntries(D.web.map(w=>[w.slug,w]));
+  return table([
+    ['Severity', i=>({high:0,medium:1,low:2})[i.severity], i=>`<span class="pill ${i.severity==='high'?'p-red':i.severity==='medium'?'p-amber':'p-gray'}">${i.severity}</span>`],
+    ['Kind', i=>i.kind], ['Detail', i=>i.detail],
+    ['Records', i=>i.ids.join(' '), i=>i.ids.map(id => byId[id] ? `<a class="jump" data-id="${id}">${id}</a>` : `<a href="${esc(webBySlug[id]?.url)}" target="_blank">${esc(id)}</a>`).join('<br>')],
+  ], rows, i=>i.kind+i.ids[0]);
+}
+
+function sitesView(){
+  const rows = D.sites.filter(s => (!state.st || s.state===state.st) && (state.flag!=='multi' || s.account_ids.length>1) && qmatch(s));
+  document.getElementById('count').textContent = rows.length + ' of ' + D.sites.length + ' sites · ' + Object.keys(D.site_of).length + ' facility accounts';
+  return `<p class="legend">CRM facility accounts grouped by normalized street + zip. Accounts in the same site describe the same building; their names, phones and parents are listed together.</p>` + table([
+    ['Accounts', s=>s.account_ids.length, s=>`<b>${s.account_ids.length}</b>`],
+    ['Normalized address', s=>s.street, s=>`${esc(s.street)}<br><span class="mono">${s.street_spellings.map(esc).join(' / ')}</span>`],
+    ['City', s=>s.city, s=>`${esc(s.city)}, ${esc(s.state)} ${esc(s.zip)}`],
+    ['Names', s=>s.names.join(' '), s=>s.account_ids.map(id=>`<a class="jump" data-id="${id}">${esc(byId[id].name)}</a>`).join('<br>')],
+    ['Parents', s=>s.parents.join(' '), s=>s.account_ids.map(id=>parentPill(byId[id])).join('<br>')],
+    ['Phones', s=>s.phones.join(' '), s=>s.phones.map(esc).join('<br>')],
+    ['Revenue / AR', s=>s.account_ids.reduce((t,id)=>t+byId[id].outstanding_ar,0), s=>s.account_ids.map(id=>{const a=byId[id]; return `${money(a.lifetime_revenue)} / ${a.outstanding_ar>0?`<b style="color:var(--red)">${money(a.outstanding_ar)}</b>`:money(0)}`;}).join('<br>')],
+  ], rows, s=>s.site_id);
+}
+
+function bindJumps(){
+  document.querySelectorAll('a.jump').forEach(a => a.onclick = () => {
+    state.tab='crm'; state.q=''; state.parent=''; state.flag=''; state.st=''; state.sort=null; render();
+    const tr = document.getElementById('row-'+a.dataset.id);
+    if (tr) { tr.scrollIntoView({block:'center'}); tr.classList.add('flash'); }
+  });
+}
+
+function renderMain(){
+  const m = document.getElementById('main');
+  m.innerHTML = state.tab==='compare' ? compareView() : state.tab==='web' ? webView() : state.tab==='crm' ? crmView() : state.tab==='sites' ? sitesView() : state.tab==='orphans' ? orphansView() : issuesView();
+  bindSort(); bindJumps(); renderHeader();
+  document.querySelectorAll('button[data-act]').forEach(b => b.onclick = () => decide(b));
+}
+function render(){ renderTabs(); renderBar(); renderMain(); }
+render();
+// opened from disk: if the local review server is running, jump to the live page
+if (!D.served) {
+  fetch(API + '/api/ping').then(r => { if (r.ok) location.replace(API + '/'); }).catch(() => {});
+}
+</script>
+</body>
+</html>

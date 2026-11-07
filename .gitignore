@@ -1,0 +1,8 @@
+.env
+__pycache__/
+*.tmp
+data/decisions_dryrun.json
+.DS_Store
+data/matches_round1.json
+data/billing_flags.csv
+ASSIGNMENT.md
