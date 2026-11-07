@@ -136,7 +136,9 @@ def build(decisions=None, served=False, dry_run=False, write=True, quiet=False):
                if not o["is_candidate_elsewhere"] and o["account_id"] not in handled
                and site_of.get(o["account_id"]) not in handled_sites]
     for o in orphans:
-        plans[f"orphan|{o['account_id']}"] = proposals.build_orphan_plan(by_id[o["account_id"]])
+        site = next(s for s in m["sites"] if s["site_id"] == site_of[o["account_id"]])
+        plans[f"orphan|{o['account_id']}"] = proposals.build_orphan_plan(
+            by_id[o["account_id"]], [by_id[x] for x in site["account_ids"]])
 
     for o in m["bellhaven_orphans"]:
         if not o["is_candidate_elsewhere"]:

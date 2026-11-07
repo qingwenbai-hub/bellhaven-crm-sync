@@ -76,7 +76,11 @@ def accept_create(slug):
 
 
 def accept_orphan(account_id):
-    return run_ops(proposals.build_orphan_plan(crm_api.get_account(account_id)))
+    m = json.load(open("data/matches.json"))
+    site = next(s for s in m["sites"] if account_id in s["account_ids"])
+    accts = [crm_api.get_account(x) for x in site["account_ids"]]
+    me = next(x for x in accts if x["account_id"] == account_id)
+    return run_ops(proposals.build_orphan_plan(me, accts))
 
 
 def accept(slug, site_id, account_id):

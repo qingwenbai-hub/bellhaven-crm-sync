@@ -156,10 +156,35 @@ def build_create_plan(w):
              "why": "No CRM account matches this website location, so a new account is created under Bellhaven"}]
 
 
-def build_orphan_plan(a):
+def build_orphan_plan(a, same_address=None):
     """CRM account under the Bellhaven parent that is no longer on the website.
-    The new owner is unknown, so the parent is NOT changed; the account is flagged
-    for a human to research (and billing is warned if money is still owed)."""
+
+    If another active account at the same address sits under a different parent,
+    that operator most likely bought the facility:
+      - revenue AND AR (billing SOP): leave the old account exactly as it is and set
+        chow_current_account to the new owner's existing account
+      - otherwise: retire the old account as a duplicate of the new owner's account
+    If there is no such account, the new owner is unknown, so the parent is NOT
+    changed; the account is flagged for a human to research."""
+    buyers = [o for o in (same_address or [])
+              if o["account_id"] != a["account_id"] and o.get("parent_id")
+              and o["parent_id"] != BELLHAVEN_PARENT and o.get("status") != "Inactive"]
+    if buyers:
+        b = buyers[0]
+        owner = (b.get("parent_name") or "").replace(" (Parent Account)", "")
+        if billing_flag(a):
+            return [{"op": "patch", "account_id": a["account_id"],
+                     "fields": {"chow_current_account": b["account_id"]},
+                     "before": {"chow_current_account": a.get("chow_current_account", "")},
+                     "why": f"CHOW: {b['name']} ({owner}) is at the same address, so the facility was sold to "
+                            f"{owner}. Revenue ${a['lifetime_revenue']:,} and AR ${a['outstanding_ar']:,}: the old "
+                            f"account is not edited; only chow_current_account points to the {owner} account"}]
+        return [{"op": "patch", "account_id": a["account_id"],
+                 "fields": {"duplicate_of_account": b["account_id"], "status": "Inactive",
+                            "note": _note(a.get("note"), f"Not on the Bellhaven website; {b['name']} ({owner}) "
+                                                         f"is at the same address. Retired as a duplicate of {b['account_id']}.")},
+                 "before": {"duplicate_of_account": a.get("duplicate_of_account", ""), "status": a.get("status", "")},
+                 "why": f"Sold to {owner}: their account at the same address survives"}]
     text = (f"Under Bellhaven in CRM but not listed on the Bellhaven website (checked {_today()}). "
             f"Possible sale, closure or rebrand. Parent left unchanged because the new owner is unknown.")
     if billing_flag(a):

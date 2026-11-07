@@ -72,7 +72,8 @@ are linked from the home page but not from the first list page.
 | Match under another parent, revenue > 0 **and** AR > 0 (**CHOW SOP**) | Old account left exactly as it is except `chow_current_account` = new id; a new account is created under Bellhaven with the website data |
 | Other accounts at the same address | `duplicate_of_account` = surviving account, status Inactive, note |
 | No CRM account | Create the account under Bellhaven |
-| Under Bellhaven but not on the website | status Needs Review + note. The parent is **not** changed because the new owner is unknown; if it carries revenue and AR the note warns that the CHOW SOP applies when the buyer is known |
+| Under Bellhaven but not on the website, **another operator has an account at the same address** | That operator bought it. Revenue + AR: old account left exactly as it is, `chow_current_account` = the buyer's existing account (Sandusky to Millstone). Otherwise: `duplicate_of_account` = buyer's account, Inactive |
+| Under Bellhaven but not on the website, no other account at the address | status Needs Review + note. The parent is **not** changed because the new owner is unknown |
 
 Every write adds a dated `[bellhaven-sync]` line to the account's note so a sales rep can
 see why it changed. The app re-reads the accounts from the CRM right before writing, so a
@@ -93,6 +94,7 @@ location can only have one accepted match.
   a human instead of guessed.
 - **Duplicates are retired, not merged.** The API has no merge or delete, so the losing copy
   points at the survivor with `duplicate_of_account` and becomes Inactive.
+- **Evidence of a buyer beats a guess.** If another operator already has an account at the same address, that is the new owner. If there is no such account, the facility is flagged, not moved.
 - **Unknown owner means flag, not guess.** An account that disappeared from the website is
   marked Needs Review rather than moved to a parent we cannot verify.
 

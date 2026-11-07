@@ -849,15 +849,15 @@
     "billing_state": "OH",
     "billing_zip": "44870",
     "care_type": "Skilled Nursing",
-    "status": "Needs Review",
+    "status": "Active",
     "phone": "(260) 212-1086",
     "lifetime_revenue": 130000,
     "outstanding_ar": 5200,
-    "chow_current_account": "",
+    "chow_current_account": "0017JP8Z1UQ763BVK3",
     "duplicate_of_account": "",
-    "note": "[bellhaven-sync 2026-11-06] Under Bellhaven in CRM but not listed on the Bellhaven website (checked 2026-11-06). Possible sale, closure or rebrand. Parent left unchanged because the new owner is unknown. Billing history: revenue $130,000, AR $5,200; if it was sold, follow the CHOW SOP (do not re-parent this account).",
+    "note": "",
     "created_by_candidate": false,
-    "updated_at": "2026-11-07 00:06:05Z"
+    "updated_at": "2026-11-07 00:45:42Z"
   },
   {
     "account_id": "001A7DF09B643A64DF",

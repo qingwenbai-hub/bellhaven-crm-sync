@@ -1054,22 +1054,42 @@
     "site_id": "",
     "account_id": "001SXSF4ELF0Z2LGDM",
     "action": "accept",
-    "reason": "",
-    "at": "2026-11-06T16:06:05",
+    "reason": "Revised: Millstone Care of Sandusky is at the same address, so the facility was sold to Millstone. Billing SOP: old account restored to its original status (Active) and empty note; only chow_current_account is set.",
+    "at": "2026-11-07T00:45:42",
     "dry_run": false,
     "ops": [
       {
         "op": "patch",
         "account_id": "001SXSF4ELF0Z2LGDM",
         "fields": {
-          "status": "Needs Review",
-          "note": "[bellhaven-sync 2026-11-06] Under Bellhaven in CRM but not listed on the Bellhaven website (checked 2026-11-06). Possible sale, closure or rebrand. Parent left unchanged because the new owner is unknown. Billing history: revenue $130,000, AR $5,200; if it was sold, follow the CHOW SOP (do not re-parent this account)."
+          "chow_current_account": "0017JP8Z1UQ763BVK3",
+          "status": "Active",
+          "note": ""
         },
         "before": {
-          "status": "Active"
+          "status": "Needs Review",
+          "note": "[bellhaven-sync 2026-11-06] Under Bellhaven in CRM but not listed on the Bellhaven website (checked 2026-11-06). Possible sale, closure or rebrand. Parent left unchanged because the new owner is unknown. Billing history: revenue $130,000, AR $5,200; if it was sold, follow the CHOW SOP (do not re-parent this account).",
+          "chow_current_account": ""
         },
-        "why": "Not on the website any more; flag for research instead of guessing a new parent"
+        "why": "CHOW to Millstone Care of Sandusky; undo the earlier Needs Review flag"
       }
-    ]
+    ],
+    "revised_from": {
+      "at": "2026-11-06T16:06:05",
+      "ops": [
+        {
+          "op": "patch",
+          "account_id": "001SXSF4ELF0Z2LGDM",
+          "fields": {
+            "status": "Needs Review",
+            "note": "[bellhaven-sync 2026-11-06] Under Bellhaven in CRM but not listed on the Bellhaven website (checked 2026-11-06). Possible sale, closure or rebrand. Parent left unchanged because the new owner is unknown. Billing history: revenue $130,000, AR $5,200; if it was sold, follow the CHOW SOP (do not re-parent this account)."
+          },
+          "before": {
+            "status": "Active"
+          },
+          "why": "Not on the website any more; flag for research instead of guessing a new parent"
+        }
+      ]
+    }
   }
 }
